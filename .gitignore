@@ -1,0 +1,70 @@
+# =========================
+# 1. Dependencies
+# =========================
+node_modules/
+package-lock.json
+yarn.lock
+# Only ignore lock files if you are sure you don't want to lock versions (usually keep them, but ignore node_modules)
+
+# =========================
+# 2. Environment Variables (CRITICAL)
+# =========================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+*.env.js
+
+# =========================
+# 3. Build & Production Artifacts
+# =========================
+# Frontend (Vite/React) build output
+dist/
+build/
+out/
+
+# Backend build output (if using TypeScript/Babel)
+dist-server/
+
+# =========================
+# 4. Logs & Debugging
+# =========================
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# =========================
+# 5. OS & IDE System Files
+# =========================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# =========================
+# 6. Testing & Coverage
+# =========================
+coverage/
+.nyc_output/
+
+# =========================
+# 7. Optional: Uploads
+# =========================
+# If you ever save files locally before Cloudinary
+uploads/
+tmp/
+temp/
