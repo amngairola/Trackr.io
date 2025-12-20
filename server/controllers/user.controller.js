@@ -9,8 +9,8 @@ const generateAccessAndRefreshTokens = async (userId) => {
   try {
     const user = await User.findById(userId);
 
-    const accessToken = user.generateAccessToken();
-    const refreshToken = user.generateRefreshToken();
+    const accessToken = user.genrateAccessToken();
+    const refreshToken = user.genrateRefreshToken();
 
     user.refreshToken = refreshToken;
 
@@ -37,11 +37,9 @@ export const registerUser = asyncHandler(async (req, res) => {
   ) {
     throw new ApiError(400, "All fields are required");
   }
-
   const userExists = await User.findOne({ email });
 
   if (userExists) throw new ApiError(409, "User with email already exists");
-
   let role = "user";
 
   if (adminKey && adminKey === process.env.ADMIN_SECRET_KEY) {
@@ -56,7 +54,6 @@ export const registerUser = asyncHandler(async (req, res) => {
   const avatar = await uploadOnCloudinary(avatarLocalPath);
 
   if (!avatar) throw new ApiError(400, "Avatar upload failed");
-
   const user = await User.create({
     username,
     avatar: avatar.url,
@@ -64,7 +61,6 @@ export const registerUser = asyncHandler(async (req, res) => {
     password,
     role,
   });
-
   const createdUser = await User.findById(user._id).select(
     "-password -refreshToken"
   );
