@@ -26,17 +26,8 @@ app.use(
 app.use(cookieParser());
 app.use(express.static("public"));
 
-import userRouter from "./routes/user.route.js";
+import userRouter from "./routes/user.routes.js";
 
 app.use("/api/v1/users", userRouter);
 
 export default app;
-
-//URL-> http://localhost:3000/api/v1/users/register
-/*
-{
-  "email": "aman@example.com",
-  "password": "securePassword123",
-}
-
-*/

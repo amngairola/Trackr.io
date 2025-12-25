@@ -17,11 +17,6 @@ const problemSchema = Schema({
     enum: ["Easy", "Medium", "Hard"],
     default: "Medium",
   },
-  notes: {
-    type: String,
-    default: "",
-    trim: true,
-  },
 });
 
 const SheetSchema = Schema(

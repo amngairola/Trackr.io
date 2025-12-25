@@ -1,9 +1,13 @@
-import { User } from "../models/user.model";
-import { asyncHandler } from "../utils/asyncHandler.utils";
+import { User } from "../models/user.model.js";
+import ApiError from "../utils/apiErr.utils.js";
+import { asyncHandler } from "../utils/asyncHandler.utils.js";
+import jwt from "jsonwebtoken";
 
-export const vaifyJWT = asyncHandler(async (req, res, next) => {
+export const verifyJWT = asyncHandler(async (req, res, next) => {
   try {
-    req.token =
+    // console.log("👉 Cookies Received:", req.cookies);
+    // console.log("👉 Auth Header:", req.header("Authorization"));
+    const token =
       req.cookies?.accessToken ||
       req.header("Authorization")?.replace("Bearer ", "");
 
@@ -29,7 +33,7 @@ export const vaifyJWT = asyncHandler(async (req, res, next) => {
   }
 });
 
-export const varifyAdmin = (req, res, next) => {
+export const verifyAdmin = (req, res, next) => {
   if (req.user?.role === "admin") {
     next();
   } else {

@@ -12,16 +12,10 @@ const ProgressSchema = Schema(
       required: true,
       trim: true,
     },
-
     status: {
       type: String,
-      enum: ["pending", "solving", "done"],
+      enum: ["pending", "done"],
       default: "pending",
-    },
-    notes: {
-      type: String,
-      default: "",
-      trim: true,
     },
     completedAt: {
       type: Date,
