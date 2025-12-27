@@ -34,18 +34,13 @@ const Register = () => {
         formData.append("avatar", data.avatar[0]);
       }
 
-      // ⚠️ FIX: Changed "/user" to "/users" to match your backend convention
-      const response = await api.post("/users/register", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      const response = await api.post("/register", formData);
 
       console.log("Registration Success:", response.data);
       navigate("/login");
     } catch (error) {
       console.error("Registration failed:", error);
-      // Optional chaining to safely get the error message
+
       setServerError(error.response?.data?.message || "Something went wrong");
     } finally {
       setIsLoading(false);
@@ -60,7 +55,7 @@ const Register = () => {
           <img src={app_icon} className="rounded-2xl " />
         </div>
         <h1 className="text-2xl font-light tracking-tight text-white">
-          Sign up to DSA Tracker
+          Sign up to Tracker.io
         </h1>
       </div>
 

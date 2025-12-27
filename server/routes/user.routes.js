@@ -2,6 +2,7 @@ import { Router } from "express";
 import { upload } from "../middleware/multer.middleware.js";
 import {
   createSheet,
+  getDailyChallenge,
   getPersonalSheet,
   getSheetDetails,
   getSystemSheets,
@@ -53,7 +54,7 @@ router.route("/getSheet/:sheetId").get(verifyJWT, getSheetDetails);
 router.route("/toggel-Status").post(verifyJWT, toggleProblemStatus);
 
 //daily challenge
-router.route("/daily-challenge").get(getDailyChallenge);
+router.route("/daily-challenge").get(verifyJWT, getDailyChallenge);
 
 //get user progress
 router.route("/my-progress/:userId").get(verifyJWT, getUserProgress);
