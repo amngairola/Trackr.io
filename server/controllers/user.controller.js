@@ -208,7 +208,7 @@ export const getUser = asyncHandler(async (req, res) => {
 //create personal sheet
 
 export const createSheet = asyncHandler(async (req, res) => {
-  const { title, problems } = req.body;
+  const { title, problems, description } = req.body;
 
   if ([title, problems].some((field) => field === undefined || field === "")) {
     throw new ApiError(400, "Title, isSystemSheet, and Problems are required");
@@ -223,6 +223,7 @@ export const createSheet = asyncHandler(async (req, res) => {
 
   const newSheet = await Sheet.create({
     title,
+    description,
     isSystemSheet,
     owner,
     problems,
@@ -239,26 +240,6 @@ export const createSheet = asyncHandler(async (req, res) => {
     .json(new ApiRes(200, createdSheet, "sheet created successfully"));
 });
 
-/* CONTROLLERS 
-
-Controller Name,Purpose,Status
-registerUser,Sign up,✅ Done
-loginUser,Login,✅ Done
-getCurrentUser,"Check ""Who am I?""",✅ Done
-createSheet,Add new sheet,✅ Done
-logoutUser,Clear cookies, done
-refreshAccessToken,Keep user logged in, done
-
-getSheets,List all sheets, done
-getSheetById,View specific problems, done
-toggleProblemStatus,Check/Uncheck box,done
-getUserProgress,Dashboard Graphs, done
-
-*/
-
-//get user progress  - User Progress (streak, solved count, graph data) every time they solve a problem or visit the dashboard.
-
-//get all availeble public sheet list
 export const getSystemSheets = asyncHandler(async (req, res) => {
   const systemSheets = await Sheet.find({
     isSystemSheet: true,
@@ -395,6 +376,7 @@ export const getDailyChallenge = asyncHandler(async (req, res) => {
     },
     {
       $project: {
+        _id: "$problems._id",
         title: "$problems.title",
         url: "$problems.url",
         difficulty: "$problems.difficulty",
@@ -477,5 +459,69 @@ export const getUserProgress = asyncHandler(async (req, res) => {
     );
 });
 
+export const getCompletdProblems = asyncHandler(async (req, res) => {
+  try {
+    const completedProblems = await Progress.find({
+      user: req.user._id,
+      status: "done",
+    }).select("problemUrl");
+
+    const completedUrls = completedProblems.map((e) => e.problemUrl);
+
+    res.status(200).json(completedUrls);
+  } catch (error) {
+    console.error("Error fetching progress:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 //admin only
 export const getAllUsers = asyncHandler(async (req, res) => {});
+
+// add problems
+export const addProblemToSheet = async (req, res) => {
+  const { sheetId, problem } = req.body;
+  // problem = { title, link, difficulty, platform }
+
+  const sheet = await Sheet.findById(sheetId);
+  if (!sheet) throw new Error("Sheet not found");
+
+  // Add to array
+  sheet.problems.push(problem);
+  await sheet.save();
+
+  res.status(200).json({ message: "Problem added", data: sheet });
+};
+
+//add problem in bluk
+export const addBulkProblems = async (req, res) => {
+  try {
+    const { sheetId, problems } = req.body;
+
+    if (!problems || !Array.isArray(problems)) {
+      return res.status(400).json({ message: "Invalid data format" });
+    }
+
+    const updatedSheet = await Sheet.findByIdAndUpdate(
+      sheetId,
+      {
+        $addToSet: {
+          problems: { $each: problems },
+        },
+      },
+      { new: true } // Return the updated document
+    );
+
+    if (!updatedSheet) {
+      return res.status(404).json({ message: "Sheet not found" });
+    }
+
+    res.status(200).json({
+      message: `Successfully added ${problems.length} problems`,
+      data: updatedSheet,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};

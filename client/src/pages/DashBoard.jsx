@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import api from "../context/axios.js";
-import { CheckCircle2, Flame, Loader2 } from "lucide-react"; // Removed Trophy
+import { CheckCircle2, Flame, Loader2 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 import StatsCard from "./../components/StatsCard";
@@ -11,108 +11,87 @@ const Dashboard = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [dailyChallenge, setDailyChallenge] = useState([]);
-
-  // New state for Heatmap
   const [heatmapValues, setHeatmapValues] = useState([]);
 
   const [stats, setStats] = useState({
     solved: 0,
     streak: 0,
-    easy: 0, // Backend doesn't send this yet
-    medium: 0, // Backend doesn't send this yet
-    hard: 0, // Backend doesn't send this yet
+    easy: 0,
+    medium: 0,
+    hard: 0,
   });
 
-  // Helper: Calculate Streak from Heatmap Data
+  // Helper: Calculate Streak
   const calculateStreak = (data) => {
     if (!data || data.length === 0) return 0;
 
-    // Sort dates descending
     const sortedDates = data
       .map((item) => new Date(item.date))
       .sort((a, b) => b - a);
 
-    let streak = 0;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Check if latest activity is today or yesterday
-    const lastActive = sortedDates[0];
+    const lastActive = new Date(sortedDates[0]);
     lastActive.setHours(0, 0, 0, 0);
 
-    const diffTime = Math.abs(today - lastActive);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    // If last activity was more than 1 day ago (meaning not today or yesterday), streak is broken
+    // If last activity > 1 day ago, streak is broken
+    const diffDays = Math.ceil(
+      Math.abs(today - lastActive) / (1000 * 60 * 60 * 24)
+    );
     if (diffDays > 1) return 0;
 
-    // Count consecutive days
-    streak = 1;
+    let streak = 1;
     for (let i = 0; i < sortedDates.length - 1; i++) {
       const current = sortedDates[i];
       const next = sortedDates[i + 1];
+      const diff = (current - next) / (1000 * 60 * 60 * 24);
 
-      const oneDay = 1000 * 60 * 60 * 24;
-      const diff = (current - next) / oneDay;
-
-      if (diff === 1) {
-        streak++;
-      } else if (diff > 1) {
-        break;
-      }
+      if (diff === 1) streak++;
+      else if (diff > 1) break;
     }
     return streak;
   };
 
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        setLoading(true);
+  // Main Data Fetcher (Memoized so it can be passed as a prop)
+  const fetchDashboardData = useCallback(async () => {
+    if (!user) return;
 
-        // 1. Fetch Daily Challenge
-        const challengeRes = await api.get("/daily-challenge");
-        if (
-          challengeRes.data.data &&
-          challengeRes.data.data.problems &&
-          challengeRes.data.data.problems.length > 0
-        ) {
-          setDailyChallenge(challengeRes.data.data.problems);
-        } else {
-          setDailyChallenge({
-            title: "No Problems Yet",
-            difficulty: "System",
-            link: "#",
-          });
-        }
-
-        // 2. Fetch User Progress (Updated with your Controller logic)
-        const progressRes = await api.get(`/my-progress/${user._id}`);
-        const { totalSolved, heatmapData } = progressRes.data.data;
-
-        // Calculate Streak
-        const currentStreak = calculateStreak(heatmapData);
-
-        setStats({
-          solved: totalSolved || 0,
-          streak: currentStreak,
-          easy: 0, // ⚠️ Your controller doesn't return this yet
-          medium: 0, // ⚠️ Your controller doesn't return this yet
-          hard: 0, // ⚠️ Your controller doesn't return this yet
+    try {
+      // 1. Fetch Daily Challenge
+      const challengeRes = await api.get("/daily-challenge");
+      if (challengeRes.data?.data?.problems?.length > 0) {
+        setDailyChallenge(challengeRes.data.data.problems);
+      } else {
+        setDailyChallenge({
+          title: "No Problems Yet",
+          difficulty: "System",
+          link: "#",
         });
-
-        // Pass data to heatmap
-        setHeatmapValues(heatmapData || []);
-      } catch (error) {
-        console.error("Error fetching dashboard:", error);
-      } finally {
-        setLoading(false);
       }
-    };
 
-    if (user) {
-      fetchDashboardData();
+      // 2. Fetch User Stats & Heatmap
+      const progressRes = await api.get(`/my-progress/${user._id}`);
+      const { totalSolved, heatmapData } = progressRes.data.data;
+
+      setStats((prev) => ({
+        ...prev,
+        solved: totalSolved || 0,
+        streak: calculateStreak(heatmapData),
+      }));
+
+      setHeatmapValues(heatmapData || []);
+    } catch (error) {
+      console.error("Error fetching dashboard:", error);
+    } finally {
+      setLoading(false);
     }
   }, [user]);
+
+  // Initial Load
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
 
   if (loading) {
     return (
@@ -142,18 +121,16 @@ const Dashboard = () => {
 
       {/* 2. MAIN GRID */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* LEFT COLUMN */}
+        {/* LEFT COLUMN: HEATMAP & BREAKDOWN */}
         <div className="lg:col-span-2 space-y-6">
-          {/* We pass the real values to the heatmap now */}
           <ActivityHeatmap values={heatmapValues} />
 
-          {/* Difficulty Breakdown (Static 0 for now until backend update) */}
+          {/* Difficulty Breakdown (Placeholder) */}
           <div className="bg-[#161b22] border border-[#30363d] rounded-md p-6 opacity-50 pointer-events-none">
             <h3 className="text-lg font-semibold text-white mb-4">
               Difficulty Breakdown{" "}
               <span className="text-xs text-[#8b949e]">(Coming Soon)</span>
             </h3>
-            {/* ... Kept existing chart code but it will show empty/0 ... */}
             <div className="space-y-4">
               <div>
                 <div className="flex justify-between text-sm mb-1">
@@ -171,9 +148,12 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* RIGHT COLUMN */}
+        {/* RIGHT COLUMN: CHALLENGE CARD */}
         <div className="lg:col-span-1 space-y-6">
-          <DailyChallengeCard challenges={dailyChallenge} />
+          <DailyChallengeCard
+            challenges={dailyChallenge}
+            onStatusChange={fetchDashboardData} // This triggers the Heatmap refresh!
+          />
         </div>
       </div>
     </div>

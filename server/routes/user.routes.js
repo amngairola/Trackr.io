@@ -1,10 +1,13 @@
 import { Router } from "express";
 import { upload } from "../middleware/multer.middleware.js";
 import {
+  addProblemToSheet,
   createSheet,
+  getCompletdProblems,
   getDailyChallenge,
   getPersonalSheet,
   getSheetDetails,
+  addBulkProblems,
   getSystemSheets,
   getUser,
   getUserProgress,
@@ -48,6 +51,8 @@ router.route("/create-new-sheet").post(verifyJWT, createSheet);
 router.route("/get-public-sheet").get(getSystemSheets);
 router.route("/get-personal-sheet").get(verifyJWT, getPersonalSheet);
 router.route("/getSheet/:sheetId").get(verifyJWT, getSheetDetails);
+router.route("/add-problem").post(verifyJWT, addProblemToSheet);
+router.route("/add-bulk").post(verifyJWT, addBulkProblems);
 
 //mark problem as done
 
@@ -58,5 +63,7 @@ router.route("/daily-challenge").get(verifyJWT, getDailyChallenge);
 
 //get user progress
 router.route("/my-progress/:userId").get(verifyJWT, getUserProgress);
+
+router.route("/progress/completed").get(verifyJWT, getCompletdProblems);
 
 export default router;
