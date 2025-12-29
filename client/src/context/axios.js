@@ -1,8 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL:
-    import.meta.env.VITE_BASE_URL || "http://localhost:3000/api/v1/users",
+  baseURL: import.meta.env.VITE_BASE_URL,
   withCredentials: true,
 });
 // 1. Request Interceptor: Attach Access Token
@@ -46,11 +45,11 @@ api.interceptors.response.use(
     // 3. Handle Token Refresh
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-
+      //VITE_BASE_URL
       try {
         // Call backend refresh endpoint
         const response = await axios.post(
-          "http://localhost:3000/api/v1/users/refresh-token",
+          `${import.meta.env.VITE_BASE_URL}/refresh-token`, // Use backticks ` ` and ${ }
           {},
           { withCredentials: true }
         );
