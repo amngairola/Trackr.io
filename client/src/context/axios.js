@@ -5,27 +5,78 @@ const api = axios.create({
     import.meta.env.VITE_BASE_URL || "http://localhost:3000/api/v1/users",
   withCredentials: true,
 });
+// 1. Request Interceptor: Attach Access Token
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
+// 2. Response Interceptor: Handle 401 Errors
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
-    // If error is 401 (Unauthorized) and we haven't tried refreshing yet
+    // --- FIX 2: PREVENT INFINITE LOOP START ---
+
+    // A. If the error comes from checking the current user, DO NOT redirect.
+    // This just means the user is a guest (not logged in yet).
+    if (
+      originalRequest.url?.includes("/get-user") ||
+      originalRequest.url?.includes("/current-user")
+    ) {
+      return Promise.reject(error);
+    }
+
+    // B. If user is already on Login/Register page, DO NOT redirect.
+    // If they type a wrong password, we don't want to refresh the page.
+    if (
+      window.location.pathname === "/login" ||
+      window.location.pathname === "/register"
+    ) {
+      return Promise.reject(error);
+    }
+
+    // 3. Handle Token Refresh
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
       try {
-        // This line automatically sends the HttpOnly Refresh Token Cookie
-        await api.post("/users/refresh-token");
+        // Call backend refresh endpoint
+        const response = await axios.post(
+          "http://localhost:3000/api/v1/users/refresh-token",
+          {},
+          { withCredentials: true }
+        );
 
-        // If successful, retry the original failed request
+        const { accessToken } = response.data.data;
+
+        // Save new token
+        localStorage.setItem("accessToken", accessToken);
+
+        // Update header and retry original request
+        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         return api(originalRequest);
       } catch (refreshError) {
-        // If refresh fails, let the error pass (user will be redirected to login)
+        // If refresh fails, session is truly expired.
+        console.error("Session expired:", refreshError);
+        localStorage.removeItem("accessToken");
+
+        // Final safety check: Only redirect if NOT on login page
+        if (window.location.pathname !== "/login") {
+          window.location.href = "/login";
+        }
+
         return Promise.reject(refreshError);
       }
     }
+
     return Promise.reject(error);
   }
 );

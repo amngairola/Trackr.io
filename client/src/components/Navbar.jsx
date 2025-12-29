@@ -10,6 +10,7 @@ import {
   Menu, // Hamburger icon
   X, // Close icon
 } from "lucide-react";
+import app_icon from "../assets/app_icon.png";
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -50,7 +51,7 @@ const Navbar = () => {
             >
               <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
                 {/* T for Tracker.io */}
-                <span className="text-black font-bold text-sm">T</span>
+                <img src={app_icon} className="rounded-2xl" alt="Logo" />
               </div>
               <span className="font-semibold text-white tracking-tight text-lg">
                 Tracker.io

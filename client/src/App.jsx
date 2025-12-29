@@ -15,6 +15,8 @@ import SheetView from "./pages/SheetView";
 
 import Navbar from "./components/Navbar";
 
+import AuthLayout from "./components/AuthLayout";
+
 const ProtectedLayout = () => {
   const { user, loading } = useAuth();
 
@@ -76,7 +78,14 @@ const App = () => {
         </Route>
 
         {/* Fallback Route (404) */}
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        <Route
+          path="*"
+          element={
+            <AuthLayout authentication={true}>
+              <Dashboard />
+            </AuthLayout>
+          }
+        />
       </Routes>
     </>
   );

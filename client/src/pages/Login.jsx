@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAuth } from "../context/AuthContext";
+import app_icon from "../assets/app_icon.png";
 
 export const Login = () => {
   const navigate = useNavigate();
@@ -39,7 +40,7 @@ export const Login = () => {
       {/* 1. Logo Section */}
       <div className="mb-6 text-center">
         <div className="w-12 h-12 bg-white rounded-full mx-auto flex items-center justify-center mb-4">
-          <span className="text-black font-bold text-xl">DS</span>
+          <img src={app_icon} className="rounded-2xl" alt="Logo" />
         </div>
         <h1 className="text-2xl font-light tracking-tight text-white">
           Sign in to Tracker.io

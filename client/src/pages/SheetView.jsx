@@ -39,7 +39,7 @@ const SheetView = () => {
         ]);
 
         // 2. Set Sheet Data
-        // Adjust this if your backend returns { data: { ... } } or just { ... }
+
         setSheet(sheetRes.data.data || sheetRes.data);
 
         // 3. Set Progress Map
@@ -66,7 +66,7 @@ const SheetView = () => {
   };
 
   // Helper booleans
-  // We assume personal sheets have isSystem: false (or undefined)
+
   const isPersonalSheet =
     sheet && (sheet.isSystem === false || sheet.isSystem === undefined);
   const isEmpty = sheet && (!sheet.problems || sheet.problems.length === 0);

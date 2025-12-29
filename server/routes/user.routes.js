@@ -16,6 +16,7 @@ import {
   refreshAccessToken,
   registerUser,
   toggleProblemStatus,
+  verifyOTP,
 } from "../controllers/user.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 
@@ -36,6 +37,8 @@ router.route("/register").post(
 
   registerUser
 );
+
+router.post("/verify-otp", verifyOTP);
 
 //sign-up sign-in
 router.route("/login").post(loginUser);
