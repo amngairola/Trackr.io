@@ -7,8 +7,6 @@ import { Sheet } from "../models/sheet.model.js";
 import { Progress } from "../models/progress.model.js";
 import { DailyChallenge } from "../models/dailyChallenge.model.js";
 
-import { Resend } from "resend";
-
 import { sendEmail } from "../utils/emai.uitls.js";
 
 // Generate Access and Refresh Token
@@ -101,6 +99,7 @@ export const registerUser = asyncHandler(async (req, res) => {
   try {
     console.log("email called");
     await sendEmail(email, otp);
+    console.log("email called done");
   } catch (error) {
     await User.findByIdAndDelete(user._id);
     throw new ApiError(
@@ -109,11 +108,13 @@ export const registerUser = asyncHandler(async (req, res) => {
     );
   }
 
+  console.log("3");
   // 8. Success Response
   const createdUser = await User.findById(user._id).select(
     "-password -refreshToken -otp"
   );
 
+  console.log("4");
   return res
     .status(201)
     .json(
@@ -124,7 +125,6 @@ export const registerUser = asyncHandler(async (req, res) => {
 // --- Verify OTP ---
 export const verifyOTP = asyncHandler(async (req, res) => {
   const { email, otp } = req.body;
-
   if (!email || !otp) {
     throw new ApiError(400, "Email and OTP are required");
   }
@@ -147,13 +147,13 @@ export const verifyOTP = asyncHandler(async (req, res) => {
   }
 
   // 4. Update User
+
   user.isVerified = true;
   user.otp = undefined;
   user.otpExpiry = undefined;
   await user.save({ validateBeforeSave: false });
 
   // 5. Generate Token (Auto-Login)
-
   const { refreshToken, accessToken } = await generateAccessAndRefreshTokens(
     user._id
   );

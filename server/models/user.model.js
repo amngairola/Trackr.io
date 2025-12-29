@@ -2,7 +2,7 @@ import { Schema, model } from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 
-const UserSchema = Schema(
+const UserSchema = new Schema(
   {
     username: {
       type: String,
@@ -27,7 +27,7 @@ const UserSchema = Schema(
       default: "user",
     },
     avatar: {
-      type: String, // cloudnry url
+      type: String,
       required: true,
       default: null,
     },
@@ -53,11 +53,10 @@ const UserSchema = Schema(
   }
 );
 
+// --- Hooks & Methods ---
+
 UserSchema.pre("save", async function () {
   if (!this.isModified("password")) return;
-
-  // Hash password
-
   this.password = await bcrypt.hash(this.password, 10);
 });
 
@@ -65,7 +64,7 @@ UserSchema.methods.isPasswordCorrect = async function (password) {
   return await bcrypt.compare(password, this.password);
 };
 
-UserSchema.methods.genrateAccessToken = function () {
+UserSchema.methods.generateAccessToken = function () {
   return jwt.sign(
     {
       _id: this.id,
@@ -80,7 +79,7 @@ UserSchema.methods.genrateAccessToken = function () {
   );
 };
 
-UserSchema.methods.genrateRefreshToken = async function () {
+UserSchema.methods.generateRefreshToken = function () {
   return jwt.sign(
     {
       _id: this.id,
@@ -92,5 +91,13 @@ UserSchema.methods.genrateRefreshToken = async function () {
     }
   );
 };
+
+UserSchema.index(
+  { createdAt: 1 },
+  {
+    expireAfterSeconds: 180, // 3 Minutes
+    partialFilterExpression: { isVerified: false },
+  }
+);
 
 export const User = model("User", UserSchema);
