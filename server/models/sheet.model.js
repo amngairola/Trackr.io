@@ -27,6 +27,11 @@ const SheetSchema = Schema(
       trim: true,
       unique: true,
     },
+    description: {
+      type: String,
+      trim: true,
+      unique: true,
+    },
 
     isSystemSheet: {
       type: Boolean,
