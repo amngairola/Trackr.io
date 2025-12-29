@@ -10,7 +10,9 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const checkUser = async () => {
       try {
-        const { data } = await api.get("/get-user");
+        const { data } = await api.get("/get-user", {
+          withCredentials: true,
+        });
         setUser(data.data);
       } catch (error) {
         setUser(null);
