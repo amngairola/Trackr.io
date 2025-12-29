@@ -9,7 +9,7 @@ import { DailyChallenge } from "../models/dailyChallenge.model.js";
 
 import { Resend } from "resend";
 
-import nodemailer from "nodemailer";
+import { sendEmail } from "../utils/emai.uitls.js";
 
 // Generate Access and Refresh Token
 const generateAccessAndRefreshTokens = async (userId) => {
@@ -99,6 +99,7 @@ export const registerUser = asyncHandler(async (req, res) => {
 
   // 7. Send Email (SAFE MODE)
   try {
+    console.log("email called");
     await sendEmail(email, otp);
   } catch (error) {
     await User.findByIdAndDelete(user._id);
@@ -632,40 +633,6 @@ export const addBulkProblems = async (req, res) => {
     res.status(500).json({ message: "Server Error" });
   }
 };
-
-//send email
-export const sendEmail = asyncHandler(async (email, otp) => {
-  try {
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      host: "smtp.gmail.com",
-      port: 587,
-      secure: false,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: "Verify your Account - Tracker.io",
-      html: `
-           <div style="font-family: Arial, sans-serif; padding: 20px;">
-            <h2>Email Verification</h2>
-            <p>Your One-Time Password (OTP) for verification is:</p>
-            <h1 style="color: #238636; letter-spacing: 5px;">${otp}</h1>
-            <p>This code expires in 10 minutes.</p>
-          </div>
-        `,
-    };
-    await transporter.sendMail(mailOptions);
-    console.log("email sent");
-  } catch (error) {
-    console.error("Email send failed:", error);
-  }
-});
 
 // send email
 // const resend = new Resend(process.env.RESEND_API_KEY);
