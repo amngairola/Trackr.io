@@ -634,87 +634,87 @@ export const addBulkProblems = async (req, res) => {
 };
 
 //send email
-// export const sendEmail = asyncHandler(async (email, otp) => {
-//   try {
-//     const transporter = nodemailer.createTransport({
-//       service: "gmail",
-//       auth: {
-//         user: process.env.EMAIL_USER, // Your Gmail address
-//         pass: process.env.EMAIL_PASS, // Your Gmail App Password (NOT your real password)
-//       },
-//     });
+export const sendEmail = asyncHandler(async (email, otp) => {
+  try {
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER, // Your Gmail address
+        pass: process.env.EMAIL_PASS, // Your Gmail App
+      },
+    });
 
-//     const mailOptions = {
-//       from: process.env.EMAIL_USER,
-//       to: email,
-//       subject: "Verify your Account - DSA Tracker",
-//       html: `
-//           <div style="font-family: Arial, sans-serif; padding: 20px;">
-//             <h2>Email Verification</h2>
-//             <p>Your One-Time Password (OTP) for verification is:</p>
-//             <h1 style="color: #238636; letter-spacing: 5px;">${otp}</h1>
-//             <p>This code expires in 10 minutes.</p>
-//           </div>
-//         `,
-//     };
-//     await transporter.sendMail(mailOptions);
-//     console.log("email sent");
-//   } catch (error) {
-//     console.error("Email send failed:", error);
-//   }
-// });
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Verify your Account - Tracker.io",
+      html: `
+           <div style="font-family: Arial, sans-serif; padding: 20px;">
+            <h2>Email Verification</h2>
+            <p>Your One-Time Password (OTP) for verification is:</p>
+            <h1 style="color: #238636; letter-spacing: 5px;">${otp}</h1>
+            <p>This code expires in 10 minutes.</p>
+          </div>
+        `,
+    };
+    await transporter.sendMail(mailOptions);
+    console.log("email sent");
+  } catch (error) {
+    console.error("Email send failed:", error);
+  }
+});
 
 // send email
-const resend = new Resend(process.env.RESEND_API_KEY);
+// const resend = new Resend(process.env.RESEND_API_KEY);
 
-export const sendEmail = async (email, otp) => {
-  try {
-    await resend.emails.send({
-      from: "onboarding@resend.dev",
-      to: email,
-      subject: "Verify your Tracker.io Account",
-      html: `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <title>Email Verification</title>
-        </head>
-        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f9f9f9; padding: 20px;">
-          
-          <div style="max-width: 500px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; border: 1px solid #e1e4e8; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-            
-            <div style="background-color: #0d1117; padding: 20px; text-align: center;">
-              <h1 style="color: #ffffff; margin: 0; font-size: 20px; letter-spacing: 1px; font-weight: 600;">Tracker.io</h1>
-            </div>
-            
-            <div style="padding: 30px 40px;">
-              <h2 style="color: #1f2937; margin-top: 0; font-size: 18px; text-align: center;">Verify your email address</h2>
-              
-              <p style="color: #4b5563; font-size: 15px; margin-bottom: 25px; text-align: center;">
-                Thanks for joining Tracker.io! Please enter the following code to complete your registration:
-              </p>
-              
-              <div style="background-color: #f3f4f6; padding: 15px; border-radius: 6px; text-align: center; margin: 30px 0; border: 1px dashed #d1d5db;">
-                <span style="font-size: 32px; font-family: monospace; font-weight: 700; color: #238636; letter-spacing: 6px;">${otp}</span>
-              </div>
-              
-              <p style="color: #6b7280; font-size: 13px; text-align: center; margin-top: 30px;">
-                This code will expire in 10 minutes.<br>
-                If you didn't request this, you can safely ignore this email.
-              </p>
-            </div>
-            
-            <div style="background-color: #f9fafb; padding: 15px; text-align: center; border-top: 1px solid #e5e7eb; font-size: 12px; color: #9ca3af;">
-              &copy; ${new Date().getFullYear()} Tracker.io. All rights reserved.
-            </div>
-            
-          </div>
-        </body>
-        </html>
-      `,
-    });
-  } catch (error) {
-    console.error(error);
-  }
-};
+// export const sendEmail = async (email, otp) => {
+//   try {
+//     await resend.emails.send({
+//       from: "onboarding@resend.dev",
+//       to: email,
+//       subject: "Verify your Tracker.io Account",
+//       html: `
+//         <!DOCTYPE html>
+//         <html>
+//         <head>
+//           <meta charset="utf-8">
+//           <title>Email Verification</title>
+//         </head>
+//         <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f9f9f9; padding: 20px;">
+
+//           <div style="max-width: 500px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; border: 1px solid #e1e4e8; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+
+//             <div style="background-color: #0d1117; padding: 20px; text-align: center;">
+//               <h1 style="color: #ffffff; margin: 0; font-size: 20px; letter-spacing: 1px; font-weight: 600;">Tracker.io</h1>
+//             </div>
+
+//             <div style="padding: 30px 40px;">
+//               <h2 style="color: #1f2937; margin-top: 0; font-size: 18px; text-align: center;">Verify your email address</h2>
+
+//               <p style="color: #4b5563; font-size: 15px; margin-bottom: 25px; text-align: center;">
+//                 Thanks for joining Tracker.io! Please enter the following code to complete your registration:
+//               </p>
+
+//               <div style="background-color: #f3f4f6; padding: 15px; border-radius: 6px; text-align: center; margin: 30px 0; border: 1px dashed #d1d5db;">
+//                 <span style="font-size: 32px; font-family: monospace; font-weight: 700; color: #238636; letter-spacing: 6px;">${otp}</span>
+//               </div>
+
+//               <p style="color: #6b7280; font-size: 13px; text-align: center; margin-top: 30px;">
+//                 This code will expire in 10 minutes.<br>
+//                 If you didn't request this, you can safely ignore this email.
+//               </p>
+//             </div>
+
+//             <div style="background-color: #f9fafb; padding: 15px; text-align: center; border-top: 1px solid #e5e7eb; font-size: 12px; color: #9ca3af;">
+//               &copy; ${new Date().getFullYear()} Tracker.io. All rights reserved.
+//             </div>
+
+//           </div>
+//         </body>
+//         </html>
+//       `,
+//     });
+//   } catch (error) {
+//     console.error(error);
+//   }
+// };
