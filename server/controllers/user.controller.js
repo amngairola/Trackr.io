@@ -14,8 +14,8 @@ const generateAccessAndRefreshTokens = async (userId) => {
   try {
     const user = await User.findById(userId);
 
-    const accessToken = user.genrateAccessToken();
-    const refreshToken = user.genrateRefreshToken();
+    const accessToken = user.generateAccessToken();
+    const refreshToken = user.generateRefreshToken();
 
     user.refreshToken = refreshToken;
 
@@ -31,11 +31,10 @@ const generateAccessAndRefreshTokens = async (userId) => {
   }
 };
 
-// --- Register User ---
 export const registerUser = asyncHandler(async (req, res) => {
   const { username, email, password, adminKey } = req.body;
 
-  // 1. Validation
+  // Validate required fields
   if (
     [username, email, password].some(
       (field) => field?.trim() === "" || field === undefined
@@ -44,68 +43,46 @@ export const registerUser = asyncHandler(async (req, res) => {
     throw new ApiError(400, "All fields are required");
   }
 
-  // 2. Check Existing User
+  // Check for duplicate user
   const existingUser = await User.findOne({
     $or: [{ email }, { username }],
   });
 
   if (existingUser) {
     if (existingUser.email === email) {
-      if (!existingUser.isVerified) {
-        await User.findByIdAndDelete(existingUser._id);
-      } else {
-        throw new ApiError(409, "User with this email already exists");
-      }
-    } else if (existingUser.username === username) {
-      throw new ApiError(409, "Username is already taken.");
+      throw new ApiError(409, "User with this email already exists");
     }
+    throw new ApiError(409, "Username is already taken");
   }
 
-  // 3. Role Logic
-  let role = "user";
-  if (adminKey && adminKey === process.env.ADMIN_SECRET_KEY) {
-    role = "admin";
-  }
+  // Handle Role
+  const role = adminKey === process.env.ADMIN_SECRET_KEY ? "admin" : "user";
 
-  // 4. Generate OTP
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
-
-  // 5. Avatar Handling (We must wait for this, otherwise we can't save the user)
+  // Handle Avatar Upload
   const avatarLocalPath = req.files?.avatar?.[0]?.path;
   if (!avatarLocalPath) throw new ApiError(400, "Profile picture is required");
 
   const avatar = await uploadOnCloudinary(avatarLocalPath);
   if (!avatar) throw new ApiError(400, "Avatar upload failed");
 
-  // 6. Create User (Saved to DB)
+  // Create User
   const user = await User.create({
     username,
     avatar: avatar.url,
     email,
     password,
     role,
-    otp,
-    otpExpiry,
-    isVerified: false,
+    isVerified: true,
   });
 
-  await sendEmail(email, otp).catch((err) =>
-    console.error(`Background Email Error for ${email}:`, err)
-  );
-
-  // 8. Success Response (Sent immediately)
   const createdUser = await User.findById(user._id).select(
     "-password -refreshToken -otp"
   );
 
   return res
     .status(201)
-    .json(
-      new ApiRes(200, createdUser, "User registered. Please verify your email.")
-    );
+    .json(new ApiRes(200, createdUser, "User registered successfully"));
 });
-
 // --- Verify OTP ---
 export const verifyOTP = asyncHandler(async (req, res) => {
   const { email, otp } = req.body;
