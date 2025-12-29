@@ -90,7 +90,7 @@ export const registerUser = asyncHandler(async (req, res) => {
     isVerified: false,
   });
 
-  sendEmail(email, otp).catch((err) =>
+  await sendEmail(email, otp).catch((err) =>
     console.error(`Background Email Error for ${email}:`, err)
   );
 
