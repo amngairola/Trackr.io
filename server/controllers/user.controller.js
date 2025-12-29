@@ -46,23 +46,18 @@ export const registerUser = asyncHandler(async (req, res) => {
 
   // 2. Check Existing User
   const existingUser = await User.findOne({
-    $or: [{ email }, { username }], //
+    $or: [{ email }, { username }],
   });
 
   if (existingUser) {
-    // Determine which one is the duplicate for a clear error message
     if (existingUser.email === email) {
-      // If unverified, we delete to allow re-registration (as per previous logic)
       if (!existingUser.isVerified) {
         await User.findByIdAndDelete(existingUser._id);
       } else {
         throw new ApiError(409, "User with this email already exists");
       }
     } else if (existingUser.username === username) {
-      throw new ApiError(
-        409,
-        "Username is already taken. Please choose another."
-      );
+      throw new ApiError(409, "Username is already taken.");
     }
   }
 
@@ -74,9 +69,9 @@ export const registerUser = asyncHandler(async (req, res) => {
 
   // 4. Generate OTP
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 Minutes
+  const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
 
-  // 5. Avatar Handling
+  // 5. Avatar Handling (We must wait for this, otherwise we can't save the user)
   const avatarLocalPath = req.files?.avatar?.[0]?.path;
   if (!avatarLocalPath) throw new ApiError(400, "Profile picture is required");
 
@@ -95,26 +90,15 @@ export const registerUser = asyncHandler(async (req, res) => {
     isVerified: false,
   });
 
-  // 7. Send Email (SAFE MODE)
-  try {
-    console.log("email called");
-    await sendEmail(email, otp);
-    console.log("email called done");
-  } catch (error) {
-    await User.findByIdAndDelete(user._id);
-    throw new ApiError(
-      500,
-      "Failed to send verification email. Please try again."
-    );
-  }
+  sendEmail(email, otp).catch((err) =>
+    console.error(`Background Email Error for ${email}:`, err)
+  );
 
-  console.log("3");
-  // 8. Success Response
+  // 8. Success Response (Sent immediately)
   const createdUser = await User.findById(user._id).select(
     "-password -refreshToken -otp"
   );
 
-  console.log("4");
   return res
     .status(201)
     .json(
