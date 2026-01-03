@@ -19,7 +19,9 @@ const UserSchema = new Schema(
     },
     password: {
       type: String,
-      required: true,
+      required: function () {
+        return !this.googleId;
+      },
     },
     role: {
       type: String,
@@ -36,17 +38,9 @@ const UserSchema = new Schema(
       default: null,
     },
 
-    // --- OTP Fields ---
-    isVerified: {
-      type: Boolean,
-      default: false,
-    },
-    otp: {
-      type: String,
-    },
-    otpExpiry: {
-      type: Date,
-    },
+    googleId: { type: String },
+
+    authProvider: { type: String, enum: ["email", "google"], default: "email" },
   },
   {
     timestamps: true,

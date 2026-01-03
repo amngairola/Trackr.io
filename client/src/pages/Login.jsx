@@ -5,6 +5,7 @@ import { Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAuth } from "../context/AuthContext";
 import app_icon from "../assets/app_icon.png";
+import { GoogleLogin } from "@react-oauth/google";
 
 export const Login = () => {
   const navigate = useNavigate();
@@ -35,6 +36,26 @@ export const Login = () => {
     }
   };
 
+  //google login
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      setIsLoading(true);
+      const response = await api.post("/google", {
+        googleToken: credentialResponse.credential,
+      });
+
+      const { user, accessToken } = response.data.data;
+      localStorage.setItem("accessToken", accessToken);
+      setUser(user);
+      navigate("/dashboard");
+    } catch (error) {
+      console.error("Google Login Error:", error);
+      toast.error("Google Login failed");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#0d1117] flex flex-col items-center justify-center p-4 font-sans text-[#c9d1d9]">
       {/* 1. Logo Section */}
@@ -47,10 +68,10 @@ export const Login = () => {
         </h1>
       </div>
 
-      {/* 2. Login Form Card */}
+      {/* 2. Main Card (Form + Google) */}
       <div className="w-full max-w-sm bg-[#161b22] border border-[#30363d] rounded-md p-5 shadow-sm">
+        {/* Email/Password Form */}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {/* Email Input */}
           <div className="space-y-1">
             <label className="block text-sm font-medium text-white">
               Email address
@@ -67,16 +88,11 @@ export const Login = () => {
             )}
           </div>
 
-          {/* Password Input */}
           <div className="space-y-1">
             <div className="flex justify-between items-center">
               <label className="block text-sm font-medium text-white">
                 Password
               </label>
-              {/* Optional: Add Forgot Password link later */}
-              {/* <span className="text-xs text-[#58a6ff] cursor-pointer hover:underline">
-                Forgot password?
-              </span> */}
             </div>
             <input
               type="password"
@@ -90,11 +106,10 @@ export const Login = () => {
             )}
           </div>
 
-          {/* Sign In Button */}
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full mt-4 bg-[#238636] hover:bg-[#2ea043] disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-1.5 px-4 rounded-md shadow-sm transition-colors flex items-center justify-center gap-2"
+            className="w-full bg-[#238636] hover:bg-[#2ea043] disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-1.5 px-4 rounded-md shadow-sm transition-colors flex items-center justify-center gap-2"
           >
             {isLoading ? (
               <>
@@ -105,6 +120,26 @@ export const Login = () => {
             )}
           </button>
         </form>
+
+        {/* Divider */}
+        <div className="my-6 flex items-center w-full">
+          <div className="flex-1 border-t border-[#30363d]"></div>
+          <span className="px-3 text-xs text-[#8b949e] font-medium uppercase">
+            Or
+          </span>
+          <div className="flex-1 border-t border-[#30363d]"></div>
+        </div>
+
+        {/* Google Button (Centered inside the card) */}
+        <div className="flex justify-center w-full">
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => console.log("Login Failed")}
+            theme="filled_black"
+            shape="rect"
+            width="300" // Optional: helps fill the space
+          />
+        </div>
       </div>
 
       {/* 3. Footer / Register Link */}
@@ -117,5 +152,4 @@ export const Login = () => {
     </div>
   );
 };
-
 export default Login;

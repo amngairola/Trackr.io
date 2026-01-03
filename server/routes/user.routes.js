@@ -17,6 +17,7 @@ import {
   registerUser,
   toggleProblemStatus,
   verifyOTP,
+  googleLogin,
 } from "../controllers/user.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 
@@ -68,5 +69,7 @@ router.route("/daily-challenge").get(verifyJWT, getDailyChallenge);
 router.route("/my-progress/:userId").get(verifyJWT, getUserProgress);
 
 router.route("/progress/completed").get(verifyJWT, getCompletdProblems);
+
+router.route("/google").post(googleLogin);
 
 export default router;

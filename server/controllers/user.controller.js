@@ -8,6 +8,7 @@ import { Progress } from "../models/progress.model.js";
 import { DailyChallenge } from "../models/dailyChallenge.model.js";
 
 import { sendEmail } from "../utils/emai.uitls.js";
+import { OAuth2Client } from "google-auth-library";
 
 // Generate Access and Refresh Token
 const generateAccessAndRefreshTokens = async (userId) => {
@@ -141,6 +142,65 @@ export const verifyOTP = asyncHandler(async (req, res) => {
       )
     );
 });
+
+//GOOGLE LOGIN
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+export const googleLogin = asyncHandler(async (req, res) => {
+  const { googleToken } = req.body;
+
+  const ticket = await client.verifyIdToken({
+    idToken: googleToken,
+    audience: process.env.GOOGLE_CLIENT_ID,
+  });
+
+  const { name, email, picture, sub } = ticket.getPayload();
+
+  let user = await User.findOne({ email });
+
+  if (user) {
+    if (!user.googleId) {
+      user.googleId = sub;
+      user.authProvider = "google";
+      await user.save({ validateBeforeSave: false });
+    }
+  } else {
+    const randomPassword =
+      Math.random().toString(36).slice(-8) +
+      Math.random().toString(36).slice(-8);
+
+    user = await User.create({
+      username: name,
+      email,
+      password: randomPassword,
+      avatar: picture,
+      googleId: sub,
+      authProvider: "google",
+      isVerified: true, // Google verified this email already!
+    });
+  }
+  const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
+    user._id
+  );
+
+  const options = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 30 * 24 * 60 * 60 * 1000,
+  };
+
+  return res
+    .status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json(
+      new ApiRes(
+        200,
+        { user, accessToken, refreshToken },
+        "Google Login Successful"
+      )
+    );
+});
+
 // Login User
 export const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;

@@ -5,8 +5,11 @@ import { Loader2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import api from "../context/axios";
 import app_icon from "../assets/app_icon.png";
+import { GoogleLogin } from "@react-oauth/google";
+import { useAuth } from "../context/AuthContext";
 
 const Register = () => {
+  const { user, setUser } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [serverError, setServerError] = useState("");
@@ -41,6 +44,26 @@ const Register = () => {
     } catch (error) {
       console.error("Registration failed:", error);
       setServerError(error.response?.data?.message || "Registration failed");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  //google login
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      setIsLoading(true);
+      const response = await api.post("/google", {
+        googleToken: credentialResponse.credential,
+      });
+
+      const { user, accessToken } = response.data.data;
+      localStorage.setItem("accessToken", accessToken);
+      setUser(user);
+      navigate("/dashboard");
+    } catch (error) {
+      console.error("Google Login Error:", error);
+      toast.error("Google Login failed");
     } finally {
       setIsLoading(false);
     }
@@ -171,6 +194,22 @@ const Register = () => {
         <Link to="/login" className="text-[#58a6ff] hover:underline">
           Sign in
         </Link>
+      </div>
+
+      <div className="my-4 flex items-center">
+        <div className="flex-1 border-t border-gray-700"></div>
+        <span className="px-3 text-gray-500 text-sm">OR</span>
+        <div className="flex-1 border-t border-gray-700"></div>
+      </div>
+
+      {/* GOOGLE BUTTON */}
+      <div className="flex justify-center">
+        <GoogleLogin
+          onSuccess={handleGoogleSuccess}
+          onError={() => console.log("Login Failed")}
+          theme="filled_black"
+          shape="pill"
+        />
       </div>
     </div>
   );
