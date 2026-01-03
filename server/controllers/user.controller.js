@@ -623,38 +623,50 @@ export const addProblemToSheet = async (req, res) => {
   res.status(200).json({ message: "Problem added", data: sheet });
 };
 
-//add problem in bluk
-export const addBulkProblems = async (req, res) => {
-  try {
-    const { sheetId, problems } = req.body;
+// Add multiple problems at once
+export const addBulkProblems = asyncHandler(async (req, res) => {
+  const { sheetId, problems } = req.body;
 
-    if (!problems || !Array.isArray(problems)) {
-      return res.status(400).json({ message: "Invalid data format" });
-    }
-
-    const updatedSheet = await Sheet.findByIdAndUpdate(
-      sheetId,
-      {
-        $addToSet: {
-          problems: { $each: problems },
-        },
-      },
-      { new: true } // Return the updated document
-    );
-
-    if (!updatedSheet) {
-      return res.status(404).json({ message: "Sheet not found" });
-    }
-
-    res.status(200).json({
-      message: `Successfully added ${problems.length} problems`,
-      data: updatedSheet,
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server Error" });
+  if (
+    !sheetId ||
+    !problems ||
+    !Array.isArray(problems) ||
+    problems.length === 0
+  ) {
+    throw new ApiError(400, "Sheet ID and a list of problems are required");
   }
-};
+
+  // Find sheet and verify ownership
+  const sheet = await Sheet.findById(sheetId);
+  if (!sheet) {
+    throw new ApiError(404, "Sheet not found");
+  }
+
+  if (sheet.owner.toString() !== req.user._id.toString()) {
+    throw new ApiError(403, "You are not allowed to edit this sheet");
+  }
+
+  // Use $push with $each to append array to existing array
+  const updatedSheet = await Sheet.findByIdAndUpdate(
+    sheetId,
+    {
+      $push: {
+        problems: { $each: problems },
+      },
+    },
+    { new: true } // Return the updated document
+  );
+
+  return res
+    .status(200)
+    .json(
+      new ApiRes(
+        200,
+        updatedSheet,
+        `${problems.length} problems added successfully`
+      )
+    );
+});
 
 // send email
 // const resend = new Resend(process.env.RESEND_API_KEY);
