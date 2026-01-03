@@ -145,6 +145,7 @@ export const verifyOTP = asyncHandler(async (req, res) => {
 
 //GOOGLE LOGIN
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
 export const googleLogin = asyncHandler(async (req, res) => {
   const { googleToken } = req.body;
 

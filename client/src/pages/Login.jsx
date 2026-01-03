@@ -6,10 +6,11 @@ import toast from "react-hot-toast";
 import { useAuth } from "../context/AuthContext";
 import app_icon from "../assets/app_icon.png";
 import { GoogleLogin } from "@react-oauth/google";
+import api from "../context/axios";
 
 export const Login = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, setUser } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   const {
