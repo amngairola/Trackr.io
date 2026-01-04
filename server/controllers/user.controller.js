@@ -421,7 +421,6 @@ export const getSheetDetails = asyncHandler(async (req, res) => {
   if (!sheetData) {
     throw new ApiError(404, "Sheet not found");
   }
-  console.log(sheetData);
 
   return res
     .status(200)

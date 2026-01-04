@@ -1,48 +1,40 @@
 import React, { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   CheckCircle2,
   Circle,
   ExternalLink,
   Loader2,
-  Plus, // Added
-  Database, // Added
+  Plus,
+  Database,
 } from "lucide-react";
 import api from "../context/axios";
-
-import { useNavigate } from "react-router-dom";
-
+import { useAuth } from "../context/AuthContext";
 import AddProblemModal from "../components/AddProblemModal";
 
 const SheetView = () => {
+  const { user, setUser } = useAuth();
   const { sheetId } = useParams();
-
   const navigate = useNavigate();
 
   const [sheet, setSheet] = useState(null);
   const [loading, setLoading] = useState(true);
   const [completedProblems, setCompletedProblems] = useState({});
-
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
-  // Fetch Sheet Details AND User Progress in parallel
+  // Fetch Data
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-
-        // 1. Run both requests at the same time for speed
         const [sheetRes, progressRes] = await Promise.all([
           api.get(`/getSheet/${sheetId}`),
           api.get("/progress/completed"),
         ]);
 
-        // 2. Set Sheet Data
-
         setSheet(sheetRes.data.data || sheetRes.data);
 
-        // 3. Set Progress Map
         const statusMap = {};
         if (progressRes.data) {
           progressRes.data.forEach((url) => {
@@ -56,50 +48,35 @@ const SheetView = () => {
         setLoading(false);
       }
     };
-
     fetchData();
   }, [sheetId]);
 
-  // Function to refresh data after adding a problem
   const handleProblemAdded = () => {
     window.location.reload();
   };
 
-  // Helper booleans
-
+  // Helpers
   const isPersonalSheet =
-    sheet && (sheet.isSystem === false || sheet.isSystem === undefined);
+    sheet &&
+    user &&
+    (sheet.owner?._id || sheet.owner)?.toString() === user._id?.toString();
+
   const isEmpty = sheet && (!sheet.problems || sheet.problems.length === 0);
 
-  // Handle Toggle Logic
+  // Logic
   const handleToggle = async (url) => {
     try {
       const isCurrentlyDone = completedProblems[url];
-
-      // 1. Optimistic UI Update
-      setCompletedProblems((prev) => ({
-        ...prev,
-        [url]: !isCurrentlyDone,
-      }));
-
-      // 2. API Call
-      await api.post("/toggel-Status", {
-        problemUrl: url,
-      });
+      setCompletedProblems((prev) => ({ ...prev, [url]: !isCurrentlyDone }));
+      await api.post("/toggel-Status", { problemUrl: url });
     } catch (error) {
       console.error("Toggle failed", error);
-      // Revert if API fails
-      setCompletedProblems((prev) => ({
-        ...prev,
-        [url]: !prev[url],
-      }));
+      setCompletedProblems((prev) => ({ ...prev, [url]: !prev[url] }));
     }
   };
 
-  // Calculate Progress Stats
   const calculateProgress = () => {
     if (!sheet || !sheet.problems || sheet.problems.length === 0) return 0;
-
     const solvedCount = sheet.problems.filter(
       (p) => completedProblems[p.link || p.url]
     ).length;
@@ -116,9 +93,7 @@ const SheetView = () => {
 
   if (!sheet) {
     return (
-      <div className="p-10 text-center text-[#8b949e]">
-        Sheet not found or failed to load.
-      </div>
+      <div className="p-10 text-center text-[#8b949e]">Sheet not found.</div>
     );
   }
 
@@ -128,59 +103,60 @@ const SheetView = () => {
     : 0;
 
   return (
-    <div className="p-6 max-w-5xl mx-auto animate-in fade-in duration-500">
+    // Changed p-6 to p-3 for mobile, md:p-6 for desktop
+    <div className="p-3 md:p-6 max-w-5xl mx-auto animate-in fade-in duration-500 pb-20">
       {/* 1. Navigation & Header */}
-      <div className="mb-8">
+      <div className="mb-6 md:mb-8">
         <button
           onClick={(e) => {
             e.preventDefault();
             navigate(-1);
           }}
-          className="inline-flex items-center text-sm text-[#8b949e] hover:text-blue-400 mb-4 transition-colors cursor-pointer"
+          className="inline-flex items-center text-sm text-[#8b949e] hover:text-blue-400 mb-4 transition-colors cursor-pointer active:scale-95 transform"
         >
           <ArrowLeft className="w-4 h-4 mr-1" /> Back
         </button>
 
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-white mb-2">
+        <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
+          <div className="flex-1">
+            <h1 className="text-2xl md:text-3xl font-bold text-white mb-2 leading-tight">
               {sheet.title || sheet.name}
             </h1>
-            <p className="text-[#8b949e] max-w-2xl">
+            <p className="text-[#8b949e] text-sm md:text-base max-w-2xl line-clamp-2 md:line-clamp-none">
               {sheet.description ||
                 "Master these problems to ace your interviews."}
             </p>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-stretch gap-3 md:gap-4 shrink-0">
             {/* Progress Card */}
-            <div className="bg-[#161b22] border border-[#30363d] p-4 rounded-xl min-w-[200px]">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-[#8b949e]">
+            <div className="bg-[#161b22] border border-[#30363d] p-3 md:p-4 rounded-xl flex-1 md:min-w-50">
+              <div className="flex items-center justify-between mb-2 gap-4">
+                <span className="text-xs md:text-sm font-medium text-[#8b949e]">
                   Progress
                 </span>
-                <span className="text-xl font-bold text-white">
+                <span className="text-lg md:text-xl font-bold text-white">
                   {progressPercentage}%
                 </span>
               </div>
-              <div className="w-full bg-[#30363d] h-2 rounded-full overflow-hidden">
+              <div className="w-full bg-[#30363d] h-1.5 md:h-2 rounded-full overflow-hidden">
                 <div
                   className="bg-green-500 h-full transition-all duration-500"
                   style={{ width: `${progressPercentage}%` }}
                 ></div>
               </div>
-              <div className="mt-2 text-xs text-[#8b949e] text-right">
+              <div className="mt-2 text-[10px] md:text-xs text-[#8b949e] text-right font-mono">
                 {solvedCount} / {sheet.problems?.length || 0} Solved
               </div>
             </div>
 
-            {/* NEW: Add Problem Button (Only for Personal Sheets) */}
+            {/* Add Button (Mobile Compact / Desktop Full) */}
             {isPersonalSheet && (
               <button
                 onClick={() => setIsAddModalOpen(true)}
-                className="flex items-center justify-center gap-2 h-full px-4 py-3 bg-[#238636] hover:bg-[#2ea043] text-white rounded-xl font-medium transition-colors shadow-sm"
+                className="flex items-center justify-center px-4 bg-[#238636] hover:bg-[#2ea043] text-white rounded-xl font-medium transition-colors shadow-sm active:scale-95"
               >
-                <Plus className="w-5 h-5" />
+                <Plus className="w-6 h-6 md:w-5 md:h-5 md:mr-2" />
                 <span className="hidden md:inline">Add Problem</span>
               </button>
             )}
@@ -188,10 +164,10 @@ const SheetView = () => {
         </div>
       </div>
 
-      {/* 2. Problems Table */}
-      <div className="bg-[#161b22] border border-[#30363d] rounded-xl overflow-hidden min-h-[300px] flex flex-col">
-        {/* Table Header */}
-        <div className="grid grid-cols-12 gap-4 p-4 border-b border-[#30363d] bg-[#21262d]/50 text-sm font-medium text-[#8b949e]">
+      {/* 2. Problems List/Table */}
+      <div className="bg-[#161b22] border border-[#30363d] rounded-xl overflow-hidden min-h-[300px] flex flex-col shadow-lg">
+        {/* Table Header (Desktop Only) */}
+        <div className="hidden md:grid grid-cols-12 gap-4 p-4 border-b border-[#30363d] bg-[#21262d]/50 text-sm font-medium text-[#8b949e]">
           <div className="col-span-1 text-center">Status</div>
           <div className="col-span-7">Title</div>
           <div className="col-span-2">Difficulty</div>
@@ -202,11 +178,9 @@ const SheetView = () => {
         <div className="divide-y divide-[#30363d] flex-grow">
           {sheet.problems &&
             sheet.problems.map((problem, index) => {
-              // FIX: Handle both 'url' and 'link' keys just in case
               const targetLink = problem.link || problem.url;
               const isDone = !!completedProblems[targetLink];
 
-              // Difficulty Colors
               const diffColor =
                 problem.difficulty === "Easy"
                   ? "text-green-400 bg-green-400/10 border-green-400/20"
@@ -217,55 +191,73 @@ const SheetView = () => {
               return (
                 <div
                   key={index}
-                  className={`grid grid-cols-12 gap-4 p-4 items-center hover:bg-[#21262d]/30 transition-colors ${
-                    isDone ? "opacity-75" : ""
-                  }`}
+                  className={`
+                    group
+                    flex md:grid md:grid-cols-12 
+                    gap-3 md:gap-4 
+                    p-3 md:p-4 
+                    items-center 
+                    hover:bg-[#21262d]/40 transition-all active:bg-[#21262d]/60
+                    ${isDone ? "opacity-60 grayscale-[0.5]" : ""}
+                  `}
                 >
-                  {/* Checkbox Column */}
-                  <div className="col-span-1 flex justify-center">
+                  {/* 1. Checkbox */}
+                  <div className="shrink-0 md:col-span-1 flex justify-center">
                     <button
                       onClick={() => handleToggle(targetLink)}
-                      className="text-[#8b949e] hover:text-green-500 transition-colors"
+                      className="text-[#8b949e] hover:text-green-500 transition-colors p-1"
                     >
                       {isDone ? (
                         <CheckCircle2
-                          className="w-5 h-5 text-green-500"
+                          className="w-5 h-5 md:w-5 md:h-5 text-green-500"
                           fill="currentColor"
                           fillOpacity={0.2}
                         />
                       ) : (
-                        <Circle className="w-5 h-5" />
+                        <Circle className="w-5 h-5 md:w-5 md:h-5" />
                       )}
                     </button>
                   </div>
 
-                  {/* Title Column */}
-                  <div className="col-span-7">
-                    <a
-                      href={targetLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`font-medium hover:text-blue-400 transition-colors ${
-                        isDone
-                          ? "text-[#8b949e] line-through decoration-[#8b949e]/50"
-                          : "text-[#c9d1d9]"
-                      }`}
-                    >
-                      {problem.title}
-                    </a>
+                  {/* 2. Content (Title + Badge) */}
+                  <div className="flex-1 min-w-0 md:col-span-9 md:grid md:grid-cols-9 md:gap-4 items-center">
+                    {/* Title */}
+                    <div className="md:col-span-7 flex flex-col md:block">
+                      <a
+                        href={targetLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`text-sm md:text-base font-medium truncate block mb-1 md:mb-0 hover:text-blue-400 transition-colors ${
+                          isDone
+                            ? "line-through text-[#8b949e]"
+                            : "text-[#e6edf3]"
+                        }`}
+                      >
+                        {problem.title}
+                      </a>
+
+                      {/* Mobile Badge (Shown below title) */}
+                      <div className="md:hidden">
+                        <span
+                          className={`text-[10px] font-medium px-2 py-0.5 rounded-full border inline-block ${diffColor}`}
+                        >
+                          {problem.difficulty}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Desktop Badge (Shown in column) */}
+                    <div className="hidden md:block md:col-span-2">
+                      <span
+                        className={`text-xs px-2.5 py-0.5 rounded-full border ${diffColor}`}
+                      >
+                        {problem.difficulty}
+                      </span>
+                    </div>
                   </div>
 
-                  {/* Difficulty Column */}
-                  <div className="col-span-2">
-                    <span
-                      className={`text-xs px-2.5 py-0.5 rounded-full border ${diffColor}`}
-                    >
-                      {problem.difficulty}
-                    </span>
-                  </div>
-
-                  {/* Action Column */}
-                  <div className="col-span-2 text-right">
+                  {/* 3. Action Icon */}
+                  <div className="shrink-0 md:col-span-2 text-right">
                     <a
                       href={targetLink}
                       target="_blank"
@@ -281,19 +273,18 @@ const SheetView = () => {
 
           {/* EMPTY STATE */}
           {isEmpty && (
-            <div className="flex flex-col items-center justify-center py-20 text-center h-full">
+            <div className="flex flex-col items-center justify-center py-20 text-center h-full px-4">
               <div className="bg-[#21262d] p-4 rounded-full mb-4">
                 <Database className="w-8 h-8 text-[#8b949e]" />
               </div>
               <h3 className="text-xl font-semibold text-white mb-2">
                 This sheet is empty
               </h3>
-              <p className="text-[#8b949e] mb-6 max-w-sm">
+              <p className="text-[#8b949e] mb-6 max-w-sm text-sm">
                 {isPersonalSheet
                   ? "Start building your collection by adding your first problem."
                   : "No problems found in this system sheet."}
               </p>
-
               {isPersonalSheet && (
                 <button
                   onClick={() => setIsAddModalOpen(true)}
@@ -308,7 +299,6 @@ const SheetView = () => {
         </div>
       </div>
 
-      {/* 3. The Modal */}
       <AddProblemModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
