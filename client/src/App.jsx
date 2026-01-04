@@ -45,6 +45,7 @@ const RequireAuth = ({ children }) => {
 };
 
 const App = () => {
+  const { user } = useAuth();
   return (
     <>
       <Toaster
