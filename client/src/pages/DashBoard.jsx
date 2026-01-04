@@ -55,7 +55,10 @@ const Dashboard = () => {
 
   // Main Data Fetcher (Memoized so it can be passed as a prop)
   const fetchDashboardData = useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
     try {
       // 1. Fetch Daily Challenge
@@ -97,6 +100,19 @@ const Dashboard = () => {
     return (
       <div className="h-full flex items-center justify-center pt-20">
         <Loader2 className="w-8 h-8 animate-spin text-[#238636]" />
+      </div>
+    );
+  }
+
+  {
+    !user && (
+      <div className="bg-[#161b22] border border-[#30363d] p-6 rounded-xl text-center mb-6">
+        <h2 className="text-xl text-white font-bold">
+          Welcome to Tracker.io! 👋
+        </h2>
+        <p className="text-[#8b949e] mb-4">
+          Sign in to track your streak, solve history, and heatmap.
+        </p>
       </div>
     );
   }
@@ -152,7 +168,7 @@ const Dashboard = () => {
         <div className="lg:col-span-1 space-y-6">
           <DailyChallengeCard
             challenges={dailyChallenge}
-            onStatusChange={fetchDashboardData} // This triggers the Heatmap refresh!
+            onStatusChange={fetchDashboardData}
           />
         </div>
       </div>

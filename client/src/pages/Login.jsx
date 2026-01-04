@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom"; // Removed Link
 import { Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAuth } from "../context/AuthContext";
 import app_icon from "../assets/app_icon.png";
-import { GoogleLogin } from "@react-oauth/google";
+import { GoogleLogin, useGoogleOneTapLogin } from "@react-oauth/google";
 import api from "../context/axios";
 
 export const Login = () => {
@@ -19,30 +19,25 @@ export const Login = () => {
     formState: { errors },
   } = useForm();
 
+  // Legacy Email Login (For existing users only)
   const onSubmit = async (data) => {
     setIsLoading(true);
-
     try {
       await login(data.email, data.password);
       toast.success("Welcome back! 👋");
       navigate("/dashboard");
     } catch (error) {
-      console.error("Login failed:", error);
-      console.log(error);
-      console.log(error.response?.data?.message);
-
       const errorMessage =
         error.response?.data?.message ||
         error.message ||
         "Something went wrong";
-
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
-  //google login
+  // Google Handles Both Sign Up & Login
   const handleGoogleSuccess = async (credentialResponse) => {
     try {
       setIsLoading(true);
@@ -54,6 +49,7 @@ export const Login = () => {
       localStorage.setItem("accessToken", accessToken);
       setUser(user);
       navigate("/dashboard");
+      toast.success("Successfully logged in!");
     } catch (error) {
       console.error("Google Login Error:", error);
       toast.error("Google Login failed");
@@ -62,51 +58,80 @@ export const Login = () => {
     }
   };
 
+  useGoogleOneTapLogin({
+    onSuccess: handleGoogleSuccess,
+    onError: () => console.log("One Tap Failed"),
+  });
+
   return (
     <div className="min-h-screen bg-[#0d1117] flex flex-col items-center justify-center p-4 font-sans text-[#c9d1d9]">
-      {/* 1. Logo Section */}
-      <div className="mb-6 text-center">
-        <div className="w-12 h-12 bg-white rounded-full mx-auto flex items-center justify-center mb-4">
+      {/* 1. Header */}
+      <div className="mb-8 text-center">
+        <div className="w-12 h-12 bg-white rounded-full mx-auto flex items-center justify-center mb-4 shadow-lg shadow-blue-500/20">
           <img src={app_icon} className="rounded-2xl" alt="Logo" />
         </div>
-        <h1 className="text-2xl font-light tracking-tight text-white">
-          Sign in to Tracker.io
+        <h1 className="text-3xl font-bold tracking-tight text-white mb-2">
+          Tracker.io
         </h1>
+        <p className="text-[#8b949e]">
+          The best way to track your DSA progress.
+        </p>
       </div>
 
-      {/* 2. Main Card (Form + Google) */}
-      <div className="w-full max-w-sm bg-[#161b22] border border-[#30363d] rounded-md p-5 shadow-sm">
-        {/* Email/Password Form */}
+      {/* 2. Main Card */}
+      <div className="w-full max-w-sm bg-[#161b22] border border-[#30363d] rounded-xl p-6 shadow-2xl">
+        {/* Primary Action: Google Login */}
+        <div className="flex flex-col gap-4">
+          <h2 className="text-sm font-medium text-white text-center">
+            New here? Join with Google.
+          </h2>
+          <div className="flex justify-center w-full">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => console.log("Login Failed")}
+              theme="filled_black"
+              shape="rect"
+              width="300"
+              text="continue_with"
+              auto_select={true}
+            />
+          </div>
+        </div>
+
+        {/* Divider */}
+        <div className="my-8 flex items-center w-full">
+          <div className="flex-1 border-t border-[#30363d]"></div>
+          <span className="px-3 text-xs text-[#8b949e] font-medium uppercase tracking-wider">
+            Existing Users
+          </span>
+          <div className="flex-1 border-t border-[#30363d]"></div>
+        </div>
+
+        {/* Secondary Action: Email Login Form */}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-white">
-              Email address
-            </label>
             <input
               type="email"
+              placeholder="Email address"
               {...register("email", { required: "Email is required" })}
-              className="w-full bg-[#0d1117] border border-[#30363d] rounded-md px-3 py-1.5 text-sm text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+              className="w-full bg-[#0d1117] border border-[#30363d] rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder-[#484f58]"
             />
             {errors.email && (
-              <p className="text-red-400 text-xs mt-1">
+              <p className="text-red-400 text-xs pl-1">
                 {errors.email.message}
               </p>
             )}
           </div>
 
           <div className="space-y-1">
-            <div className="flex justify-between items-center">
-              <label className="block text-sm font-medium text-white">
-                Password
-              </label>
-            </div>
             <input
               type="password"
+              placeholder="Password"
               {...register("password", { required: "Password is required" })}
-              className="w-full bg-[#0d1117] border border-[#30363d] rounded-md px-3 py-1.5 text-sm text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+              className="w-full bg-[#0d1117] border border-[#30363d] rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder-[#484f58]"
             />
             {errors.password && (
-              <p className="text-red-400 text-xs mt-1">
+              <p className="text-red-400 text-xs pl-1">
                 {errors.password.message}
               </p>
             )}
@@ -115,47 +140,23 @@ export const Login = () => {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-[#238636] hover:bg-[#2ea043] disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-1.5 px-4 rounded-md shadow-sm transition-colors flex items-center justify-center gap-2"
+            className="w-full bg-[#21262d] hover:bg-[#30363d] border border-[#30363d] text-[#c9d1d9] font-medium py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm"
           >
             {isLoading ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" /> Signing in...
-              </>
+              <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
-              "Sign in"
+              "Sign in with Password"
             )}
           </button>
         </form>
-
-        {/* Divider */}
-        <div className="my-6 flex items-center w-full">
-          <div className="flex-1 border-t border-[#30363d]"></div>
-          <span className="px-3 text-xs text-[#8b949e] font-medium uppercase">
-            Or
-          </span>
-          <div className="flex-1 border-t border-[#30363d]"></div>
-        </div>
-
-        {/* Google Button (Centered inside the card) */}
-        <div className="flex justify-center w-full">
-          <GoogleLogin
-            onSuccess={handleGoogleSuccess}
-            onError={() => console.log("Login Failed")}
-            theme="filled_black"
-            shape="rect"
-            width="300" // Optional: helps fill the space
-          />
-        </div>
       </div>
 
-      {/* 3. Footer / Register Link */}
-      <div className="mt-4 p-4 text-sm text-center border border-[#30363d] rounded-md w-full max-w-sm">
-        <span className="text-[#c9d1d9]">New to Tracker.io? </span>
-        <Link to="/register" className="text-[#58a6ff] hover:underline">
-          Create an account
-        </Link>
-      </div>
+      {/* 3. Footer Note */}
+      <p className="mt-6 text-xs text-[#8b949e] text-center max-w-xs">
+        By continuing, you agree to our Terms of Service and Privacy Policy.
+      </p>
     </div>
   );
 };
+
 export default Login;

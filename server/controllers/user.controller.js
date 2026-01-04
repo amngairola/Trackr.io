@@ -254,7 +254,6 @@ export const loginUser = asyncHandler(async (req, res) => {
 });
 
 //logout user
-
 export const logOutUser = asyncHandler(async (req, res) => {
   await User.findByIdAndUpdate(
     req.user._id,

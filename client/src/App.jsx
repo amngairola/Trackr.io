@@ -8,28 +8,20 @@ import Register from "./pages/Register";
 import Login from "./pages/Login";
 import Dashboard from "./pages/DashBoard";
 import Explore from "./pages/Explore";
-
 import MyLibrary from "./pages/MyLibrary";
-
 import SheetView from "./pages/SheetView";
-
 import Navbar from "./components/Navbar";
-
 import AuthLayout from "./components/AuthLayout";
 
-const ProtectedLayout = () => {
-  const { user, loading } = useAuth();
+const MainLayout = () => {
+  const { loading } = useAuth();
 
   if (loading) {
     return (
       <div className="h-screen w-full bg-[#0d1117] flex items-center justify-center text-white">
-        Loading...
+        <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
       </div>
     );
-  }
-
-  if (!user) {
-    return <Navigate to="/login" replace />;
   }
 
   return (
@@ -40,6 +32,16 @@ const ProtectedLayout = () => {
       </main>
     </div>
   );
+};
+
+const RequireAuth = ({ children }) => {
+  const { user } = useAuth();
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
 };
 
 const App = () => {
@@ -63,29 +65,30 @@ const App = () => {
       />
 
       <Routes>
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        <Route element={<ProtectedLayout />}>
+        {/* All these routes use MainLayout (Navbar + Content) */}
+        <Route element={<MainLayout />}>
+          {/* Public Routes */}
+          <Route path="/" element={<Dashboard />} />
           <Route path="/dashboard" element={<Dashboard />} />
-
           <Route path="/explore" element={<Explore />} />
-          <Route path="/library" element={<MyLibrary />} />
-
           <Route path="/sheet/:sheetId" element={<SheetView />} />
+
+          {/* Protected Routes */}
+          <Route
+            path="/library"
+            element={
+              <RequireAuth>
+                <MyLibrary />
+              </RequireAuth>
+            }
+          />
         </Route>
 
-        {/* Fallback Route (404) */}
-        <Route
-          path="*"
-          element={
-            <AuthLayout authentication={true}>
-              <Dashboard />
-            </AuthLayout>
-          }
-        />
+        {/* Catch-all */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>
   );

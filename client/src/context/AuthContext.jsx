@@ -34,8 +34,14 @@ export const AuthProvider = ({ children }) => {
 
   // 3. Logout Function
   const logout = async () => {
-    await api.get("/logout");
-    setUser(null);
+    try {
+      await api.get("/logout");
+    } catch (error) {
+      console.error("Logout failed", error);
+    } finally {
+      localStorage.removeItem("accessToken");
+      setUser(null);
+    }
   };
 
   return (
