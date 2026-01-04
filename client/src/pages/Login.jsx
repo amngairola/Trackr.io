@@ -28,10 +28,15 @@ export const Login = () => {
       navigate("/dashboard");
     } catch (error) {
       console.error("Login failed:", error);
+      console.log(error);
+      console.log(error.response?.data?.message);
 
-      const message =
-        error.response?.data?.message || "Invalid email or password";
-      toast.error(message);
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Something went wrong";
+
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
