@@ -14,7 +14,7 @@ import Navbar from "./components/Navbar";
 import AuthLayout from "./components/AuthLayout";
 
 const MainLayout = () => {
-  const { loading } = useAuth();
+  const { user, loading } = useAuth();
 
   if (loading) {
     return (
