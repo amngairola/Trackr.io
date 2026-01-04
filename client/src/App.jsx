@@ -72,7 +72,10 @@ const App = () => {
         <Route element={<MainLayout />}>
           {/* Public Routes */}
           <Route path="/" element={<Dashboard />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route
+            path="/dashboard"
+            element={<Dashboard key={user ? user._id : "guest"} />}
+          />
           <Route path="/explore" element={<Explore />} />
           <Route path="/sheet/:sheetId" element={<SheetView />} />
 

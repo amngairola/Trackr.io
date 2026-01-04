@@ -56,6 +56,15 @@ const Dashboard = () => {
   // Main Data Fetcher (Memoized so it can be passed as a prop)
   const fetchDashboardData = useCallback(async () => {
     if (!user) {
+      setStats({
+        solved: 0,
+        streak: 0,
+        easy: 0,
+        medium: 0,
+        hard: 0,
+      });
+      setHeatmapValues([]);
+      setDailyChallenge([]);
       setLoading(false);
       return;
     }
