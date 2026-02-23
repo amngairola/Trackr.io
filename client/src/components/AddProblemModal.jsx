@@ -93,7 +93,7 @@ const AddProblemModal = ({ isOpen, onClose, sheetId, onProblemAdded }) => {
 
     try {
       if (activeTab === "single") {
-        await api.post("/add-problem", { sheetId, problem: formData });
+        await api.post("/add-problem", { sheetId, problems: formData });
         toast.success("Problem added!");
       } else {
         if (detectedProblems.length === 0) return;
