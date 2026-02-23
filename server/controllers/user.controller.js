@@ -624,6 +624,7 @@ export const addProblemToSheet = async (req, res) => {
 // Add multiple problems at once
 export const addBulkProblems = asyncHandler(async (req, res) => {
   const { sheetId, problems } = req.body;
+  console.log(problems);
 
   if (
     !sheetId ||
