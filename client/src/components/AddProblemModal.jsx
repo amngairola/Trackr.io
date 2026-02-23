@@ -19,7 +19,7 @@ const AddProblemModal = ({ isOpen, onClose, sheetId, onProblemAdded }) => {
 
   const [formData, setFormData] = useState({
     title: "",
-    link: "",
+    url: "",
     difficulty: "Medium",
     platform: "LeetCode",
   });
@@ -30,7 +30,7 @@ const AddProblemModal = ({ isOpen, onClose, sheetId, onProblemAdded }) => {
       setBulkText("");
       setFormData({
         title: "",
-        link: "",
+        url: "",
         difficulty: "Medium",
         platform: "LeetCode",
       });
@@ -40,16 +40,16 @@ const AddProblemModal = ({ isOpen, onClose, sheetId, onProblemAdded }) => {
   // Helper function (not a hook, but needed for useMemo)
   const parseBulkInput = (text) => {
     if (!text) return [];
-    const rawLinks = text
+    const rawurls = text
       .split(/[\n,\s]+/)
       .filter((l) => l.trim().startsWith("http"));
-    const uniqueLinks = [...new Set(rawLinks)];
+    const uniqueurls = [...new Set(rawurls)];
 
-    return uniqueLinks.map((link) => {
+    return uniqueurls.map((url) => {
       let title = "Unknown Problem";
       let platform = "Other";
       try {
-        const urlObj = new URL(link);
+        const urlObj = new URL(url);
         const path = urlObj.pathname;
         if (urlObj.hostname.includes("leetcode")) {
           platform = "LeetCode";
@@ -73,9 +73,9 @@ const AddProblemModal = ({ isOpen, onClose, sheetId, onProblemAdded }) => {
           }
         }
       } catch (e) {
-        console.warn("Invalid URL", link);
+        console.warn("Invalid URL", url);
       }
-      return { title, link, difficulty: "Medium", platform };
+      return { title, url: url, difficulty: "Medium" };
     });
   };
 
@@ -184,13 +184,13 @@ const AddProblemModal = ({ isOpen, onClose, sheetId, onProblemAdded }) => {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-[#8b949e] mb-1.5">
-                    Problem Link
+                    Problem url
                   </label>
                   <input
-                    name="link"
-                    value={formData.link}
+                    name="url"
+                    value={formData.url}
                     onChange={(e) =>
-                      setFormData({ ...formData, link: e.target.value })
+                      setFormData({ ...formData, url: e.target.value })
                     }
                     placeholder="https://leetcode.com/problems/..."
                     className={inputClass}

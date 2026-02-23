@@ -624,7 +624,7 @@ export const addProblemToSheet = async (req, res) => {
 // Add multiple problems at once
 export const addBulkProblems = asyncHandler(async (req, res) => {
   const { sheetId, problems } = req.body;
-  console.log(problems);
+  //console.log("1" ,problems);
 
   if (
     !sheetId ||
@@ -655,6 +655,8 @@ export const addBulkProblems = asyncHandler(async (req, res) => {
     },
     { new: true } // Return the updated document
   );
+
+  //console.log("1" ,updatedSheet);
 
   return res
     .status(200)
