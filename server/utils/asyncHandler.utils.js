@@ -5,10 +5,3 @@ const asyncHandler = (requestHandler) => {
 };
 
 export { asyncHandler };
-
-
-const asyncHandler = (reqH) =>{
-  return (req , res , next)=>{
-    Prommise.resolve(reqH(req , res , next)).catch(err)=>next(err)
-  }
-}
