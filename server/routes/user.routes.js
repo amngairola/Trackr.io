@@ -28,6 +28,8 @@ router.use((req, res, next) => {
   next();
 });
 
+app.get("/health", (req, res) => res.status(200).json({ status: "OK" }));
+
 router.route("/register").post(
   upload.fields([
     {
