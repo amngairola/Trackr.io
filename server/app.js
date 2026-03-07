@@ -4,6 +4,9 @@ import cookieParser from "cookie-parser";
 
 const app = express();
 
+// ── Health check — for Render keep-alive ping ──
+app.get("/health", (req, res) => res.status(200).json({ status: "OK" }));
+
 app.use(
   cors({
     origin: [process.env.CLIENT_URL, process.env.PRODUCTION_URL],
